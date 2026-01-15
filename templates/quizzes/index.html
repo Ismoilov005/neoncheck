@@ -1,0 +1,17 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Quiz Platform - Home{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: clamp(3rem, 6vw, 6rem) 0;">
+    <h1 style="margin-bottom: clamp(1rem, 2vw, 2rem); color: var(--accent-emerald);">
+        High-Performance Test Platform
+    </h1>
+    <p style="color: var(--text-secondary); font-size: clamp(1rem, 1.5vw, 1.25rem); margin-bottom: clamp(2rem, 4vw, 3rem);">
+        Take tests, track your progress, and excel in your learning journey
+    </p>
+    <div style="display: flex; gap: clamp(1rem, 2vw, 1.5rem); justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'login' %}" class="btn-proportional btn-primary">Login</a>
+    </div>
+</div>
+{% endblock %}

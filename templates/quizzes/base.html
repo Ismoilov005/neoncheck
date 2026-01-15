@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quiz Platform{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: rgba(26, 26, 26, 0.6);
+            --bg-tertiary: rgba(37, 37, 37, 0.5);
+            --text-primary: #e5e5e5;
+            --text-secondary: #a0a0a0;
+            --accent-emerald: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --border-color: rgba(16, 185, 129, 0.3);
+            --neon-glow-emerald: 0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3), 0 0 30px rgba(16, 185, 129, 0.2);
+            --neon-glow-cyan: 0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Snow Effect Background */
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.03) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            font-size: clamp(0.74rem, 0.68rem + 0.34vw, 0.85rem); /* 15% reduced */
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Snow Animation Container */
+        #snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: rgba(16, 185, 129, 0.4);
+            font-size: 0.6rem;
+            font-family: Arial;
+            text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+            animation: snowfall linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes snowfall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Content overlay - above snow */
+        body > *:not(#snow-container) {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Proportional scaling containers - 15% reduced */
+        .container-proportional {
+            width: clamp(238px, 90vw, 1020px); /* 15% reduced from 1200px */
+            margin: 0 auto;
+            padding: clamp(0.85rem, 1.7vw, 1.7rem); /* 15% reduced */
+        }
+
+        /* Glassmorphism Cards */
+        .card-proportional {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: clamp(0.425rem, 0.85vw, 0.64rem); /* 15% reduced */
+            padding: clamp(0.85rem, 1.7vw, 1.28rem); /* 15% reduced */
+            margin-bottom: clamp(0.85rem, 1.7vw, 1.28rem); /* 15% reduced */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-proportional:hover {
+            border-color: var(--accent-emerald);
+            box-shadow: var(--neon-glow-emerald), 0 8px 16px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Cyberpunk Buttons - 15% reduced */
+        .btn-proportional {
+            padding: clamp(0.425rem, 1.02vw, 0.64rem) clamp(0.85rem, 1.7vw, 1.28rem); /* 15% reduced */
+            font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); /* 15% reduced */
+            border-radius: 4px; /* Sharp corners for cyberpunk */
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-proportional::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-proportional:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-cyan) 100%);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); /* Sharp edges */
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(37, 37, 37, 0.7);
+            border-color: var(--accent-emerald);
+            box-shadow: var(--neon-glow-emerald);
+        }
+
+        /* Input proportional scaling - 15% reduced */
+        .input-proportional {
+            width: 100%;
+            padding: clamp(0.425rem, 0.85vw, 0.64rem); /* 15% reduced */
+            background: var(--bg-tertiary);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+            border-radius: clamp(0.32rem, 0.68vw, 0.43rem); /* 15% reduced */
+            color: var(--text-primary);
+            font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); /* 15% reduced */
+            transition: all 0.3s ease;
+        }
+
+        .input-proportional:focus {
+            outline: none;
+            border-color: var(--accent-emerald);
+            box-shadow: var(--neon-glow-emerald), 0 0 0 3px rgba(16, 185, 129, 0.1);
+            background: rgba(37, 37, 37, 0.7);
+        }
+
+        /* Navigation - Glassmorphism */
+        .navbar {
+            background: rgba(26, 26, 26, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color);
+            padding: clamp(0.64rem, 1.28vw, 0.85rem) 0; /* 15% reduced */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Correct/Incorrect answer feedback */
+        .answer-correct {
+            border-color: var(--accent-emerald) !important;
+            box-shadow: var(--neon-glow-emerald) !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .answer-incorrect {
+            border-color: var(--accent-red) !important;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5), 0 0 20px rgba(239, 68, 68, 0.3) !important;
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+
+        .answer-correct-revealed {
+            border-color: var(--accent-emerald) !important;
+            background: rgba(16, 185, 129, 0.2) !important;
+            box-shadow: var(--neon-glow-emerald) !important;
+        }
+
+        /* Modal - Glassmorphism */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: clamp(0.425rem, 0.85vw, 0.64rem); /* 15% reduced */
+            padding: clamp(1.28rem, 2.55vw, 2.13rem); /* 15% reduced */
+            max-width: clamp(238px, 90vw, 425px); /* 15% reduced */
+            width: 100%;
+            margin: clamp(0.85rem, 1.7vw, 1.7rem); /* 15% reduced */
+            box-shadow: var(--neon-glow-emerald), 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Text scaling - 15% reduced */
+        h1 { 
+            font-size: clamp(1.28rem, 2.55vw, 2.13rem); /* 15% reduced */
+            font-weight: 700; 
+        }
+        h2 { 
+            font-size: clamp(1.06rem, 2.13vw, 1.7rem); /* 15% reduced */
+            font-weight: 600; 
+        }
+        h3 { 
+            font-size: clamp(0.94rem, 1.7vw, 1.28rem); /* 15% reduced */
+            font-weight: 600; 
+        }
+        h4 { 
+            font-size: clamp(0.85rem, 1.53vw, 1.06rem); /* 15% reduced */
+            font-weight: 500; 
+        }
+
+        /* Messages - 15% reduced */
+        .messages {
+            margin-bottom: clamp(0.85rem, 1.7vw, 1.28rem); /* 15% reduced */
+        }
+
+        .message {
+            padding: clamp(0.64rem, 1.28vw, 0.85rem); /* 15% reduced */
+            border-radius: clamp(0.32rem, 0.68vw, 0.43rem); /* 15% reduced */
+            margin-bottom: clamp(0.43rem, 0.85vw, 0.64rem); /* 15% reduced */
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Grid responsive - 15% reduced */
+        .grid-proportional {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(clamp(213px, 30vw, 298px), 1fr)); /* 15% reduced */
+            gap: clamp(0.85rem, 1.7vw, 1.28rem); /* 15% reduced */
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-emerald);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Snow Effect Container -->
+    <div id="snow-container"></div>
+
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="container-proportional">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="{% url 'dashboard' %}" style="color: var(--accent-emerald); text-decoration: none; font-weight: 600; font-size: clamp(0.94rem, 1.7vw, 1.28rem); text-shadow: var(--neon-glow-emerald);">
+                    Quiz Platform
+                </a>
+                <div style="display: flex; gap: clamp(0.85rem, 1.7vw, 1.28rem); align-items: center;">
+                    <a href="{% url 'leaderboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+                        🏆 Leaderboard
+                    </a>
+                    <span style="color: var(--text-secondary); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem);">
+                        {{ user.username }} ({{ user.get_role_display }})
+                    </span>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-proportional btn-secondary">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main style="min-height: calc(100vh - 80px); padding: clamp(1.28rem, 2.55vw, 2.55rem) 0;">
+        <div class="container-proportional">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Snow Effect Script - Optimized with requestAnimationFrame -->
+    <script>
+        (function() {
+            const snowContainer = document.getElementById('snow-container');
+            if (!snowContainer) return;
+            
+            const snowflakes = ['❄', '✱', '✦', '✧', '✩', '✪', '✫', '✬'];
+            const maxSnowflakes = 50; // Limit for performance
+            let activeSnowflakes = 0;
+            let lastCreateTime = 0;
+            const createInterval = 300; // ms between snowflake creation
+            
+            function createSnowflake(timestamp) {
+                // Throttle creation with requestAnimationFrame
+                if (timestamp - lastCreateTime < createInterval) {
+                    requestAnimationFrame(createSnowflake);
+                    return;
+                }
+                
+                if (activeSnowflakes >= maxSnowflakes) {
+                    requestAnimationFrame(createSnowflake);
+                    return;
+                }
+                
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                snowflake.style.animationDelay = Math.random() * 5 + 's';
+                snowContainer.appendChild(snowflake);
+                activeSnowflakes++;
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (snowflake.parentNode) {
+                        snowflake.remove();
+                        activeSnowflakes--;
+                    }
+                }, 15000);
+                
+                lastCreateTime = timestamp;
+                requestAnimationFrame(createSnowflake);
+            }
+            
+            // Start animation loop
+            requestAnimationFrame(createSnowflake);
+            
+            // Initial snowflakes
+            let initialCount = 0;
+            function createInitial() {
+                if (initialCount < 20 && activeSnowflakes < maxSnowflakes) {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                    snowflake.style.left = Math.random() * 100 + '%';
+                    snowflake.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    snowContainer.appendChild(snowflake);
+                    activeSnowflakes++;
+                    initialCount++;
+                    
+                    setTimeout(() => {
+                        if (snowflake.parentNode) {
+                            snowflake.remove();
+                            activeSnowflakes--;
+                        }
+                    }, 15000);
+                }
+                
+                if (initialCount < 20) {
+                    setTimeout(createInitial, 150);
+                }
+            }
+            createInitial();
+        })();
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

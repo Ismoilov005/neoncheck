@@ -1,0 +1,49 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Login - Quiz Platform{% endblock %}
+
+{% block content %}
+<div style="max-width: clamp(300px, 40vw, 400px); margin: clamp(3rem, 6vw, 5rem) auto;">
+    <div class="card-proportional">
+        <h2 style="margin-bottom: clamp(1.5rem, 3vw, 2rem); text-align: center;">Login</h2>
+        
+        {% if form.errors %}
+        <div class="message error">
+            Invalid username or password. Please try again.
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Username
+                </label>
+                <input type="text" name="username" class="input-proportional" required autofocus>
+            </div>
+            
+            <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Password
+                </label>
+                <input type="password" name="password" class="input-proportional" required>
+            </div>
+
+            <button type="submit" class="btn-proportional btn-primary" style="width: 100%; margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                Login
+            </button>
+            
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+        
+        <div style="text-align: center; padding-top: clamp(1rem, 2vw, 1.5rem); border-top: 1px solid var(--border-color);">
+            <p style="color: var(--text-secondary); font-size: clamp(0.875rem, 0.9rem + 0.3vw, 1rem); margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                Don't have an account?
+            </p>
+            <a href="{% url 'register' %}" class="btn-proportional btn-secondary" style="width: 100%; text-align: center; text-decoration: none; display: inline-block;">
+                Register
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

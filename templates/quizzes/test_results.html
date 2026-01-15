@@ -1,0 +1,67 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Results: {{ test.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'admin_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Results: {{ test.title }}</h1>
+<p style="color: var(--text-secondary); margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    Total Results: {{ results.count }}
+</p>
+
+{% if results %}
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">User</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Score</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: left;">Percentage</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: left;">Completed</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: left;">Certificate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem);">{{ result.user.username }}</td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem);">{{ result.score }}/{{ result.total_questions }}</td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem);">
+                        <span style="color: {% if result.percentage >= 70 %}var(--accent-emerald){% elif result.percentage >= 50 %}var(--accent-blue){% else %}var(--accent-red){% endif %}; font-weight: 600;">
+                            {{ result.percentage|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); color: var(--text-secondary);">
+                        {% if result.completed_at %}
+                        {{ result.completed_at|date:"M d, Y H:i" }}
+                        {% else %}
+                        Incomplete
+                        {% endif %}
+                    </td>
+                    {% if request.user == result.user and result.percentage >= 80 and result.certificate_id %}
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem);">
+                        <a href="{% url 'download_certificate' result.id %}" class="btn-proportional btn-primary" style="font-size: clamp(0.64rem, 0.68rem + 0.22vw, 0.74rem); padding: clamp(0.36rem, 0.68vw, 0.55rem) clamp(0.64rem, 1.28vw, 0.85rem); text-decoration: none; display: inline-block;">
+                            📜 Download Certificate
+                        </a>
+                    </td>
+                    {% else %}
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem);"></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card-proportional" style="text-align: center; color: var(--text-secondary);">
+    <p>No results yet for this test.</p>
+</div>
+{% endif %}
+{% endblock %}

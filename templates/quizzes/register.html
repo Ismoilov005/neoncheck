@@ -1,0 +1,76 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Register - Quiz Platform{% endblock %}
+
+{% block content %}
+<div style="max-width: clamp(300px, 40vw, 450px); margin: clamp(3rem, 6vw, 5rem) auto;">
+    <div class="card-proportional">
+        <h2 style="margin-bottom: clamp(1.5rem, 3vw, 2rem); text-align: center; color: var(--accent-emerald);">
+            Create Account
+        </h2>
+        
+        {% if form.errors %}
+        <div class="message error" style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Username *
+                </label>
+                <input type="text" name="username" class="input-proportional" required autofocus 
+                       value="{{ form.username.value|default:'' }}" maxlength="150">
+            </div>
+            
+            <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Email (optional)
+                </label>
+                <input type="email" name="email" class="input-proportional" 
+                       value="{{ form.email.value|default:'' }}">
+            </div>
+            
+            <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Password *
+                </label>
+                <input type="password" name="password1" class="input-proportional" required>
+                <small style="color: var(--text-secondary); font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem); display: block; margin-top: clamp(0.25rem, 0.5vw, 0.5rem);">
+                    Must be at least 8 characters
+                </small>
+            </div>
+            
+            <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+                <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary);">
+                    Confirm Password *
+                </label>
+                <input type="password" name="password2" class="input-proportional" required>
+            </div>
+
+            <button type="submit" class="btn-proportional btn-primary" style="width: 100%; margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+                Register
+            </button>
+            
+            <div style="text-align: center;">
+                <p style="color: var(--text-secondary); font-size: clamp(0.875rem, 0.9rem + 0.3vw, 1rem);">
+                    Already have an account? 
+                    <a href="{% url 'login' %}" style="color: var(--accent-emerald); text-decoration: none;">
+                        Login here
+                    </a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

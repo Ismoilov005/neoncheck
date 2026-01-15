@@ -1,0 +1,68 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">Admin Dashboard</h1>
+
+<div class="grid-proportional" style="margin-bottom: clamp(2rem, 4vw, 3rem);">
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">My Tests</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_tests }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Results</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_results }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Questions</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_questions }}</p>
+    </div>
+</div>
+
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'test_create' %}" class="btn-proportional btn-primary">Create New Test</a>
+</div>
+
+<h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">My Tests</h2>
+<div class="grid-proportional">
+    {% for test in tests %}
+    <div class="card-proportional">
+        <h3 style="margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--accent-emerald);">
+            {{ test.title }}
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: clamp(0.75rem, 1.5vw, 1rem); font-size: clamp(0.875rem, 0.9rem + 0.3vw, 1rem);">
+            {{ test.description|truncatewords:20 }}
+        </p>
+        <div style="display: flex; gap: clamp(0.5rem, 1vw, 0.75rem); flex-wrap: wrap; margin-bottom: clamp(0.75rem, 1.5vw, 1rem);">
+            <span style="padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem); background: var(--bg-tertiary); border-radius: clamp(0.25rem, 0.5vw, 0.375rem); font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);">
+                {{ test.questions.count }} Questions
+            </span>
+            {% if test.is_private %}
+            <span style="padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem); background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border-radius: clamp(0.25rem, 0.5vw, 0.375rem); font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);">
+                Private
+            </span>
+            {% else %}
+            <span style="padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem); background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border-radius: clamp(0.25rem, 0.5vw, 0.375rem); font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);">
+                Public
+            </span>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: clamp(0.5rem, 1vw, 0.75rem); flex-wrap: wrap;">
+            <a href="{% url 'test_edit' test.id %}" class="btn-proportional btn-primary" style="flex: 1; min-width: clamp(80px, 15vw, 120px); text-align: center; text-decoration: none;">
+                Edit
+            </a>
+            <a href="{% url 'test_results' test.id %}" class="btn-proportional btn-secondary" style="flex: 1; min-width: clamp(80px, 15vw, 120px); text-align: center; text-decoration: none;">
+                Results
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card-proportional" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
+        <p>You haven't created any tests yet. <a href="{% url 'test_create' %}" style="color: var(--accent-emerald);">Create your first test!</a></p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

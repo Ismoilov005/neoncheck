@@ -1,0 +1,364 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Take Test: {{ test.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'user_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: clamp(1rem, 2vw, 1.5rem); flex-wrap: wrap; gap: clamp(1rem, 2vw, 1.5rem);">
+    <div style="flex: 1;">
+        <h1 style="margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">{{ test.title }}</h1>
+        {% if test.description %}
+        <p style="color: var(--text-secondary);">{{ test.description }}</p>
+        {% endif %}
+    </div>
+    {% if test.time_limit %}
+    <div id="timer-container" style="background: var(--bg-secondary); backdrop-filter: blur(10px); border: 2px solid var(--accent-emerald); border-radius: clamp(0.425rem, 0.85vw, 0.64rem); padding: clamp(0.85rem, 1.7vw, 1.28rem); box-shadow: var(--neon-glow-emerald);">
+        <div style="text-align: center;">
+            <div style="font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); color: var(--text-secondary); margin-bottom: clamp(0.43rem, 0.85vw, 0.64rem); text-transform: uppercase; letter-spacing: 1px;">
+                Time Remaining
+            </div>
+            <div id="timer-display" style="font-size: clamp(1.28rem, 2.55vw, 2.13rem); font-weight: 700; color: var(--accent-emerald); text-shadow: var(--neon-glow-emerald); font-family: 'Courier New', monospace;">
+                00:00
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<form id="testForm">
+    {% csrf_token %}
+    <div id="questions-container">
+        {% for question in questions %}
+        <div class="card-proportional question-card" data-question-id="{{ question.id }}" style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <h3 style="margin-bottom: clamp(1rem, 2vw, 1.5rem); color: var(--accent-emerald);">
+                Question {{ forloop.counter }}
+            </h3>
+            <p style="margin-bottom: clamp(1rem, 2vw, 1.5rem); font-size: clamp(1rem, 1.5vw, 1.125rem);">
+                {{ question.text }}
+            </p>
+            <div class="options-container" style="display: flex; flex-direction: column; gap: clamp(0.75rem, 1.5vw, 1rem);">
+                {% for option in question.options.all %}
+                <label class="option-label" 
+                       data-option-id="{{ option.id }}"
+                       data-question-id="{{ question.id }}"
+                       style="display: flex; align-items: center; padding: clamp(0.75rem, 1.5vw, 1rem); background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: clamp(0.375rem, 0.8vw, 0.5rem); cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" 
+                           name="question_{{ question.id }}" 
+                           value="{{ option.id }}" 
+                           data-question-id="{{ question.id }}"
+                           data-option-id="{{ option.id }}"
+                           style="margin-right: clamp(0.75rem, 1.5vw, 1rem); cursor: pointer;">
+                    <span style="flex: 1;">{{ option.text }}</span>
+                    <span class="answer-indicator" style="display: none; margin-left: clamp(0.5rem, 1vw, 0.75rem);"></span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin-top: clamp(2rem, 4vw, 3rem);">
+        <button type="submit" class="btn-proportional btn-primary" style="font-size: clamp(1rem, 1.5vw, 1.25rem); padding: clamp(0.75rem, 1.5vw, 1rem) clamp(2rem, 4vw, 3rem);">
+            Submit Test
+        </button>
+    </div>
+</form>
+
+<!-- Test Completion Modal -->
+<div id="completionModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem); text-align: center;">Test Completed!</h2>
+        <div id="scoreDisplay" style="text-align: center; margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <p style="font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 700; color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">
+                <span id="scoreText"></span>%
+            </p>
+            <p style="color: var(--text-secondary);">
+                You scored <span id="correctCount"></span> out of <span id="totalCount"></span>
+            </p>
+        </div>
+        <div style="display: flex; gap: clamp(0.75rem, 1.5vw, 1rem); justify-content: center;">
+            <button id="saveResultBtn" class="btn-proportional btn-primary">Save to History</button>
+            <button id="skipSaveBtn" class="btn-proportional btn-secondary">Skip</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let testData = {
+        answers: {},
+        startTime: null,
+        timeSpent: 0
+    };
+
+    // Timer functionality
+    let timerInterval = null;
+    let remainingSeconds = 0;
+    const timerKey = 'test_timer_{{ test.id }}';
+    const startTimeKey = 'test_start_time_{{ test.id }}';
+
+    // Initialize timer
+    function initTimer() {
+        {% if test.time_limit %}
+        const timeLimitMinutes = {{ test.time_limit }};
+        const timeLimitSeconds = timeLimitMinutes * 60;
+        
+        // Check if timer exists in localStorage (for page refresh)
+        const savedStartTime = localStorage.getItem(startTimeKey);
+        if (savedStartTime) {
+            const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartTime)) / 1000);
+            remainingSeconds = Math.max(0, timeLimitSeconds - elapsedSeconds);
+            testData.startTime = parseInt(savedStartTime);
+        } else {
+            remainingSeconds = timeLimitSeconds;
+            testData.startTime = Date.now();
+            localStorage.setItem(startTimeKey, testData.startTime.toString());
+        }
+
+        // Start timer
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            remainingSeconds--;
+            updateTimerDisplay();
+            
+            if (remainingSeconds <= 0) {
+                clearInterval(timerInterval);
+                localStorage.removeItem(timerKey);
+                localStorage.removeItem(startTimeKey);
+                alert('Time is up! Your test is being submitted automatically.');
+                submitTest(true); // Auto-submit
+            } else {
+                localStorage.setItem(timerKey, remainingSeconds.toString());
+            }
+        }, 1000);
+        {% endif %}
+    }
+
+    function updateTimerDisplay() {
+        const timerDisplay = document.getElementById('timer-display');
+        if (!timerDisplay) return;
+        
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        // Change color when time is running out
+        if (remainingSeconds <= 60) {
+            timerDisplay.style.color = '#ef4444';
+            timerDisplay.style.textShadow = '0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.6)';
+        } else if (remainingSeconds <= 300) { // 5 minutes
+            timerDisplay.style.color = '#f59e0b';
+            timerDisplay.style.textShadow = '0 0 10px rgba(245, 158, 11, 0.8)';
+        }
+    }
+
+    // Initialize timer on page load
+    initTimer();
+
+    /**
+     * Clear all styles, classes, and indicators from a question's options
+     */
+    function clearQuestionStyles(questionId) {
+        const questionCard = document.querySelector(`.question-card[data-question-id="${questionId}"]`);
+        if (!questionCard) return;
+        
+        // Get all option labels for this question
+        const optionLabels = questionCard.querySelectorAll('.option-label');
+        
+        optionLabels.forEach(label => {
+            // Remove all answer-related classes
+            label.classList.remove('answer-correct', 'answer-incorrect', 'answer-correct-revealed');
+            
+            // Reset border and background styles
+            label.style.borderColor = 'var(--border-color)';
+            label.style.boxShadow = 'none';
+            label.style.background = 'var(--bg-tertiary)';
+            
+            // Clear and hide indicator
+            const indicator = label.querySelector('.answer-indicator');
+            if (indicator) {
+                indicator.textContent = '';
+                indicator.style.display = 'none';
+                indicator.style.color = '';
+            }
+        });
+    }
+
+    /**
+     * Apply correct answer styling
+     */
+    function applyCorrectStyling(optionLabel) {
+        optionLabel.classList.add('answer-correct');
+        const indicator = optionLabel.querySelector('.answer-indicator');
+        if (indicator) {
+            indicator.textContent = '✓';
+            indicator.style.color = '#10b981';
+            indicator.style.display = 'inline';
+        }
+    }
+
+    /**
+     * Apply incorrect answer styling and reveal correct answer
+     */
+    function applyIncorrectStyling(optionLabel, correctOptionId) {
+        optionLabel.classList.add('answer-incorrect');
+        const indicator = optionLabel.querySelector('.answer-indicator');
+        if (indicator) {
+            indicator.textContent = '✗';
+            indicator.style.color = '#ef4444';
+            indicator.style.display = 'inline';
+        }
+        
+        // Highlight correct answer if provided
+        if (correctOptionId) {
+            const correctLabel = document.querySelector(`[data-option-id="${correctOptionId}"]`);
+            if (correctLabel) {
+                correctLabel.classList.add('answer-correct-revealed');
+                const correctIndicator = correctLabel.querySelector('.answer-indicator');
+                if (correctIndicator) {
+                    correctIndicator.textContent = '✓ Correct';
+                    correctIndicator.style.color = '#10b981';
+                    correctIndicator.style.display = 'inline';
+                }
+            }
+        }
+    }
+
+    /**
+     * Check answer via AJAX
+     */
+    function checkAnswer(questionId, optionId) {
+        // Clear all previous styles for this question first
+        clearQuestionStyles(questionId);
+        
+        fetch('/api/check-answer/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ option_id: optionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const optionLabel = document.querySelector(`[data-option-id="${optionId}"]`);
+            if (!optionLabel) return;
+            
+            if (data.is_correct) {
+                // Mark selected option as correct
+                applyCorrectStyling(optionLabel);
+            } else {
+                // Mark selected option as incorrect and reveal correct answer
+                applyIncorrectStyling(optionLabel, data.correct_option_id);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking answer:', error);
+            // Optionally show error message to user
+        });
+    }
+
+    // Handle option selection and real-time checking
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const questionId = this.dataset.questionId;
+            const optionId = this.dataset.optionId;
+            
+            // Update test data
+            testData.answers[questionId] = parseInt(optionId);
+            
+            // Always check answer via AJAX when selection changes
+            // This allows multiple updates and re-checking
+            checkAnswer(questionId, parseInt(optionId));
+        });
+    });
+
+    // Handle form submission
+    document.getElementById('testForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Check if all questions are answered
+        const totalQuestions = document.querySelectorAll('.question-card').length;
+        const answeredQuestions = Object.keys(testData.answers).length;
+        
+        if (answeredQuestions < totalQuestions) {
+            if (!confirm(`You have only answered ${answeredQuestions} out of ${totalQuestions} questions. Submit anyway?`)) {
+                return;
+            }
+        }
+        
+        submitTest(false);
+    });
+
+    function submitTest(saveToHistory) {
+        // Clear timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        localStorage.removeItem(timerKey);
+        localStorage.removeItem(startTimeKey);
+        
+        // Calculate time spent
+        if (testData.startTime) {
+            testData.timeSpent = Math.floor((Date.now() - testData.startTime) / 1000);
+        }
+        
+        fetch(`/test/{{ test.id }}/submit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                answers: testData.answers,
+                save_to_history: saveToHistory,
+                time_spent: testData.timeSpent
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (saveToHistory) {
+                    // Already saved, redirect to dashboard
+                    window.location.href = "{% url 'user_dashboard' %}";
+                } else {
+                    // Show modal with results for first submission
+                    document.getElementById('scoreText').textContent = data.percentage;
+                    document.getElementById('correctCount').textContent = data.score;
+                    document.getElementById('totalCount').textContent = data.total;
+                    document.getElementById('completionModal').classList.add('active');
+                    
+                    // Handle save button
+                    document.getElementById('saveResultBtn').onclick = function() {
+                        this.disabled = true;
+                        this.textContent = 'Saving...';
+                        submitTest(true);
+                    };
+                    
+                    // Handle skip button
+                    document.getElementById('skipSaveBtn').onclick = function() {
+                        document.getElementById('completionModal').classList.remove('active');
+                        setTimeout(() => {
+                            window.location.href = "{% url 'user_dashboard' %}";
+                        }, 500);
+                    };
+                }
+            } else {
+                alert('Error submitting test: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting test:', error);
+            alert('Error submitting test. Please try again.');
+        });
+    }
+</script>
+{% endblock %}
