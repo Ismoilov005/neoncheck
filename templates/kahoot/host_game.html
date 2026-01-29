@@ -1,0 +1,477 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Kahoot - O'yin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .host-screen {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+    
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .question-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px 0;
+    }
+    
+    .big-timer {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        font-weight: 800;
+        margin: 20px auto 16px;
+        border: 5px solid rgba(255, 250, 205, 0.6);
+        color: #fffacd;
+        text-shadow: 0 0 20px rgba(255, 250, 205, 1), 0 0 40px rgba(255, 250, 205, 0.6);
+        box-shadow: 0 0 30px rgba(255, 250, 205, 0.3), inset 0 0 20px rgba(0,0,0,0.25);
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .answer-count {
+        font-size: 1.2rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 24px;
+    }
+    
+    .host-options-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        width: 100%;
+        max-width: 920px;
+        margin-top: 24px;
+    }
+    
+    .host-option-block {
+        padding: 22px 26px;
+        border-radius: 14px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 76px;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+        border: 2px solid rgba(255,255,255,0.15);
+    }
+    
+    .host-option-block .icon {
+        font-size: 1.8rem;
+        flex-shrink: 0;
+    }
+    
+    .host-option-block.red {
+        background: var(--kahoot-red);
+        box-shadow: 0 4px 0 #a01328, 0 0 24px rgba(226, 27, 60, 0.5);
+        border-color: rgba(255, 180, 180, 0.4);
+    }
+    .host-option-block.blue {
+        background: var(--kahoot-blue);
+        box-shadow: 0 4px 0 #0d4a9e, 0 0 24px rgba(19, 104, 206, 0.5);
+        border-color: rgba(180, 210, 255, 0.4);
+    }
+    .host-option-block.yellow {
+        background: var(--kahoot-yellow);
+        box-shadow: 0 4px 0 #a87700, 0 0 24px rgba(216, 158, 0, 0.5);
+        border-color: rgba(255, 235, 180, 0.4);
+    }
+    .host-option-block.green {
+        background: var(--kahoot-green);
+        box-shadow: 0 4px 0 #1a6008, 0 0 24px rgba(38, 137, 12, 0.5);
+        border-color: rgba(180, 255, 180, 0.4);
+    }
+    
+    .question-image-neon {
+        display: inline-block;
+        padding: 8px;
+        border-radius: 14px;
+        border: 3px solid rgba(184, 255, 158, 0.5);
+        box-shadow: 0 0 25px rgba(184, 255, 158, 0.5), inset 0 0 15px rgba(0,0,0,0.2);
+    }
+    .question-image-neon img {
+        max-width: 320px;
+        width: 100%;
+        border-radius: 10px;
+        display: block;
+    }
+    
+    /* Results overlay */
+    .results-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+    }
+    
+    .results-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        height: 200px;
+        margin: 30px 0;
+    }
+    
+    .result-bar {
+        width: 80px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: 10px;
+        color: white;
+        font-weight: 700;
+        transition: height 0.5s ease;
+    }
+    
+    .leaderboard {
+        background: rgba(0,0,0,0.3);
+        border-radius: 14px;
+        padding: 20px;
+        width: 100%;
+        max-width: 420px;
+        border: 2px solid rgba(184, 255, 158, 0.3);
+        box-shadow: 0 0 25px rgba(184, 255, 158, 0.2);
+    }
+    
+    .leaderboard-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+        border-radius: 8px;
+        margin-bottom: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .leaderboard-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .leaderboard-item:nth-child(1) { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+    .leaderboard-item:nth-child(2) { box-shadow: 0 0 12px rgba(192, 192, 192, 0.3); }
+    .leaderboard-item:nth-child(3) { box-shadow: 0 0 12px rgba(205, 127, 50, 0.3); }
+    
+    /* Podium */
+    .final-podium {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a0835 0%, #2d0f5c 50%, #46178f 100%);
+    }
+    
+    .final-podium h1 {
+        color: #fffacd;
+        text-shadow: 0 0 20px rgba(255, 250, 205, 0.8), 0 0 40px rgba(255, 250, 205, 0.4);
+    }
+    
+    .final-podium .podium-bar.gold { box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); }
+    .final-podium .podium-bar.silver { box-shadow: 0 0 25px rgba(192, 192, 192, 0.6); }
+    .final-podium .podium-bar.bronze { box-shadow: 0 0 25px rgba(205, 127, 50, 0.6); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="host-screen" id="game-screen">
+    <div class="top-bar">
+        <div>
+            <strong>{{ quiz.title }}</strong>
+            <span style="opacity: 0.7; margin-left: 15px;">PIN: {{ pin }}</span>
+        </div>
+        <div id="question-counter">Savol 0/{{ total_questions }}</div>
+    </div>
+    
+    <div class="question-area" id="question-area">
+        <div id="waiting-message" style="text-align: center;">
+            <h2>O'yin boshlanmoqda...</h2>
+        </div>
+        
+        <div id="question-display" style="display: none; text-align: center; width: 100%;">
+            <h2 class="host-question" id="question-text"></h2>
+            <div id="question-image-wrap" class="question-image-neon" style="display: none; margin: 12px auto;">
+                <img id="question-image" src="" alt="">
+            </div>
+            <div class="big-timer neon-timer" id="timer">--</div>
+            <div class="answer-count" id="answer-count">0 / 0 javob berildi</div>
+            
+            <div class="host-options-grid" id="options-grid">
+                <div class="host-option-block red">
+                    <span class="icon">▲</span>
+                    <span id="option-a"></span>
+                </div>
+                <div class="host-option-block blue">
+                    <span class="icon">◆</span>
+                    <span id="option-b"></span>
+                </div>
+                <div class="host-option-block yellow">
+                    <span class="icon">●</span>
+                    <span id="option-c"></span>
+                </div>
+                <div class="host-option-block green">
+                    <span class="icon">■</span>
+                    <span id="option-d"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; padding: 20px;">
+        <button id="next-btn" class="kahoot-btn kahoot-btn-primary" style="width: auto; padding: 15px 40px; display: none;" onclick="nextQuestion()">
+            Keyingi savol →
+        </button>
+    </div>
+</div>
+
+<!-- Results overlay -->
+<div class="results-overlay" id="results-overlay">
+    <h2 style="color: #b8ff9e; text-shadow: 0 0 20px rgba(184,255,158,0.7);">Natijalar</h2>
+    
+    <div class="results-bars" id="results-bars">
+        <div class="result-bar" style="background: var(--kahoot-red); height: 0;" id="bar-a">
+            <span>0</span>
+            <span>▲</span>
+        </div>
+        <div class="result-bar" style="background: var(--kahoot-blue); height: 0;" id="bar-b">
+            <span>0</span>
+            <span>◆</span>
+        </div>
+        <div class="result-bar" style="background: var(--kahoot-yellow); height: 0;" id="bar-c">
+            <span>0</span>
+            <span>●</span>
+        </div>
+        <div class="result-bar" style="background: var(--kahoot-green); height: 0;" id="bar-d">
+            <span>0</span>
+            <span>■</span>
+        </div>
+    </div>
+    
+    <p id="correct-answer-text" style="font-size: 1.3rem; margin: 20px 0;"></p>
+    
+    <h3 style="margin: 20px 0 10px;">🏆 Top 5</h3>
+    <div class="leaderboard" id="leaderboard"></div>
+    
+    <button class="kahoot-btn kahoot-btn-primary" style="margin-top: 30px; width: auto; padding: 15px 40px;" onclick="closeResults()">
+        Davom etish →
+    </button>
+</div>
+
+<!-- Final Podium -->
+<div class="final-podium" id="final-podium">
+    <h1 style="font-size: 3rem; margin-bottom: 20px;">🎉 O'yin tugadi!</h1>
+    <h2 style="margin-bottom: 40px;">G'oliblar</h2>
+    
+    <div class="podium" id="final-podium-places"></div>
+    
+    <a href="{% url 'kahoot_dashboard' %}" class="kahoot-btn kahoot-btn-primary" style="margin-top: 50px; text-decoration: none; width: auto; padding: 20px 50px;">
+        Boshqaruv paneliga
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const pin = '{{ pin }}';
+    const totalQuestions = {{ total_questions }};
+    const avatarEmojis = ['😀', '😎', '🤓', '😺', '🦊', '🐶', '🐱', '🦁', '🐼', '🐸', '🦄', '🐲', '🤖', '👽', '🎃'];
+    
+    let currentQuestion = null;
+    let timerInterval = null;
+    let playerCount = 0;
+    
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/kahoot/${pin}/`);
+    
+    ws.onopen = function() {
+        ws.send(JSON.stringify({ action: 'host_join' }));
+    };
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'host_connected') {
+            playerCount = data.players.length;
+            if (data.current_question) {
+                showQuestion(data.current_question);
+            }
+        } else if (data.type === 'player_joined') {
+            playerCount++;
+        } else if (data.type === 'show_question') {
+            showQuestion(data.question);
+        } else if (data.type === 'answer_count_update') {
+            updateAnswerCount(data.count, data.total);
+        } else if (data.type === 'question_results') {
+            showResults(data.results);
+        } else if (data.type === 'game_ended') {
+            showFinalPodium(data.podium);
+        }
+    };
+    
+    function showQuestion(question) {
+        currentQuestion = question;
+        
+        document.getElementById('waiting-message').style.display = 'none';
+        document.getElementById('question-display').style.display = 'block';
+        document.getElementById('results-overlay').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        
+        document.getElementById('question-counter').textContent = `Savol ${question.index + 1}/${question.total}`;
+        document.getElementById('question-text').textContent = question.text;
+        
+        var imgWrap = document.getElementById('question-image-wrap');
+        if (question.image) {
+            document.getElementById('question-image').src = question.image;
+            imgWrap.style.display = 'block';
+        } else {
+            imgWrap.style.display = 'none';
+        }
+        
+        document.getElementById('option-a').textContent = question.options.A;
+        document.getElementById('option-b').textContent = question.options.B;
+        document.getElementById('option-c').textContent = question.options.C;
+        document.getElementById('option-d').textContent = question.options.D;
+        
+        document.getElementById('answer-count').textContent = `0 / ${playerCount} javob berildi`;
+        
+        // Timer
+        let remaining = question.time_limit;
+        document.getElementById('timer').textContent = remaining;
+        
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            remaining--;
+            document.getElementById('timer').textContent = remaining;
+            
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                // Natijalarni so'rash
+                ws.send(JSON.stringify({ action: 'show_results' }));
+            }
+        }, 1000);
+    }
+    
+    function updateAnswerCount(count, total) {
+        document.getElementById('answer-count').textContent = `${count} / ${total} javob berildi`;
+    }
+    
+    function showResults(results) {
+        if (timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById('results-overlay').style.display = 'flex';
+        
+        // Answer distribution bars
+        const counts = results.answer_counts;
+        const maxCount = Math.max(counts.A, counts.B, counts.C, counts.D, 1);
+        
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+            const bar = document.getElementById(`bar-${opt.toLowerCase()}`);
+            const height = (counts[opt] / maxCount) * 150;
+            bar.style.height = `${height + 30}px`;
+            bar.querySelector('span').textContent = counts[opt];
+            
+            // Highlight correct
+            if (opt === results.correct_option) {
+                bar.style.boxShadow = '0 0 20px rgba(255,255,255,0.5)';
+            } else {
+                bar.style.boxShadow = 'none';
+                bar.style.opacity = '0.5';
+            }
+        });
+        
+        // Correct answer text
+        const optionNames = {A: 'Qizil (▲)', B: 'Ko\'k (◆)', C: 'Sariq (●)', D: 'Yashil (■)'};
+        document.getElementById('correct-answer-text').textContent = `To'g'ri javob: ${optionNames[results.correct_option]}`;
+        
+        // Leaderboard
+        const leaderboardEl = document.getElementById('leaderboard');
+        leaderboardEl.innerHTML = '';
+        results.top_players.forEach((p, i) => {
+            const emoji = avatarEmojis[(p.avatar_id || 1) - 1] || '😀';
+            leaderboardEl.innerHTML += `
+                <div class="leaderboard-item">
+                    <span>${i + 1}. ${emoji} ${p.nickname}</span>
+                    <span>${p.score} ball</span>
+                </div>
+            `;
+        });
+    }
+    
+    function closeResults() {
+        document.getElementById('results-overlay').style.display = 'none';
+        
+        // Reset bars
+        ['a', 'b', 'c', 'd'].forEach(opt => {
+            const bar = document.getElementById(`bar-${opt}`);
+            bar.style.height = '0';
+            bar.style.opacity = '1';
+        });
+        
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+    
+    function nextQuestion() {
+        document.getElementById('next-btn').style.display = 'none';
+        ws.send(JSON.stringify({ action: 'next_question' }));
+    }
+    
+    function showFinalPodium(podium) {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('results-overlay').style.display = 'none';
+        document.getElementById('final-podium').style.display = 'flex';
+        
+        const podiumEl = document.getElementById('final-podium-places');
+        const order = [1, 0, 2]; // silver, gold, bronze
+        const classes = ['silver', 'gold', 'bronze'];
+        const places = ['🥈', '🥇', '🥉'];
+        
+        let html = '';
+        order.forEach((idx, i) => {
+            if (podium[idx]) {
+                const p = podium[idx];
+                const emoji = avatarEmojis[(p.avatar_id || 1) - 1] || '😀';
+                html += `
+                    <div class="podium-place">
+                        <div style="font-size: 4rem;">${emoji}</div>
+                        <div class="podium-bar ${classes[i]}">${places[i]}</div>
+                        <div class="podium-name">${p.nickname}</div>
+                        <div class="podium-score">${p.score} ball</div>
+                    </div>
+                `;
+            }
+        });
+        
+        podiumEl.innerHTML = html;
+    }
+</script>
+{% endblock %}

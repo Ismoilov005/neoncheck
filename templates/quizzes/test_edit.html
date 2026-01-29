@@ -1,0 +1,357 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Edit Test: {{ test.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'admin_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">Edit Test: {{ test.title }}</h1>
+
+<div class="card-proportional" style="margin-bottom: clamp(2rem, 4vw, 3rem);">
+    <h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">Test Details</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Test Title *
+            </label>
+            <input type="text" name="title" class="input-proportional" value="{{ test.title }}" required>
+        </div>
+        
+        <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Description
+            </label>
+            <textarea name="description" class="input-proportional" rows="4">{{ test.description }}</textarea>
+        </div>
+        
+        <div style="margin-bottom: clamp(1.28rem, 2.55vw, 1.7rem);">
+            <label style="display: block; margin-bottom: clamp(0.43rem, 0.85vw, 0.64rem); color: var(--text-secondary); font-weight: 500;">
+                Time Limit (minutes) *
+            </label>
+            <input type="number" name="time_limit" class="input-proportional" value="{{ test.time_limit }}" min="1" max="300" required>
+        </div>
+        
+        <div style="margin-bottom: clamp(1.28rem, 2.55vw, 1.7rem);">
+            <label style="display: flex; align-items: center; gap: clamp(0.43rem, 0.85vw, 0.64rem); cursor: pointer;">
+                <input type="checkbox" name="is_private" {% if test.is_private %}checked{% endif %} style="width: clamp(15px, 1.28vw, 17px); height: clamp(15px, 1.28vw, 17px); cursor: pointer;">
+                <span style="color: var(--text-secondary);">Make this test private</span>
+            </label>
+        </div>
+        
+        <div id="allowedUsersSection" style="display: {% if test.is_private %}block{% else %}none{% endif %}; margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Allowed Users
+            </label>
+            <div style="max-height: clamp(200px, 30vw, 300px); overflow-y: auto; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: clamp(0.375rem, 0.8vw, 0.5rem); padding: clamp(0.75rem, 1.5vw, 1rem);">
+                {% for user_obj in users %}
+                <label style="display: flex; align-items: center; padding: clamp(0.5rem, 1vw, 0.75rem); cursor: pointer;">
+                    <input type="checkbox" name="allowed_users" value="{{ user_obj.id }}" 
+                           {% if user_obj.id in allowed_user_ids %}checked{% endif %}
+                           style="margin-right: clamp(0.5rem, 1vw, 0.75rem); cursor: pointer;">
+                    <span>{{ user_obj.username }} ({{ user_obj.email }})</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-proportional btn-primary">Update Test</button>
+    </form>
+</div>
+
+<h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">Questions</h2>
+
+{% if questions %}
+<div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+    <button type="button" id="pdfExportQuestionsBtn" class="btn-proportional btn-secondary">
+        📄 PDF sifatida yuklab olish
+    </button>
+</div>
+<div id="questions-pdf-content" style="position: absolute; left: -9999px; width: 210mm; background: #fff; color: #1a1a1a; padding: 15mm; font-size: 11pt;">
+    <h2 style="text-align: center; margin-bottom: 1rem;">{{ test.title }} — Savollar ro'yxati</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid #333;">
+                <th style="padding: 6px 8px; text-align: left;">#</th>
+                <th style="padding: 6px 8px; text-align: left;">Savol</th>
+                <th style="padding: 6px 8px; text-align: left;">To'g'ri javob</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for question in questions %}
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 6px 8px;">{{ forloop.counter }}</td>
+                <td style="padding: 6px 8px;">{{ question.text }}</td>
+                <td style="padding: 6px 8px;">{% for opt in question.options.all %}{% if opt.is_correct %}{{ opt.text }}{% endif %}{% endfor %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Bulk Import Section -->
+<div class="card-proportional" style="margin-bottom: clamp(2rem, 4vw, 3rem); background: var(--bg-tertiary); border: 2px solid var(--accent-emerald);">
+    <h3 style="margin-bottom: clamp(1rem, 2vw, 1.5rem); color: var(--accent-emerald);">Bulk Import Questions</h3>
+    <p style="color: var(--text-secondary); margin-bottom: clamp(1rem, 2vw, 1.5rem); font-size: clamp(0.875rem, 0.9rem + 0.3vw, 1rem);">
+        <strong>Standart format:</strong> Har bir savol bloki <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 3px; color: var(--accent-emerald);">++++</code> bilan boshlanadi, variantlar <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 3px;">====</code> bilan ajratiladi, to'g'ri javob <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 3px;">#</code> bilan belgilanadi.<br>
+        <strong>Word Generator:</strong> Har bir qator <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 3px;">Inglizcha so'z +++++ Uzb tarjima</code> (5 ta plyus). Variantlar avtomatik yaratiladi.
+    </p>
+    
+    <div id="bulkImportMessage" style="display: none; margin-bottom: clamp(1rem, 2vw, 1.5rem);"></div>
+    
+    <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+        <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+            Test nomi (ixtiyoriy)
+        </label>
+        <input type="text" id="bulkTestNameInput" name="test_name" class="input-proportional" 
+               placeholder="Masalan: Unit 1 — bo'sh qoldirilsa, savollar joriy testga qo'shiladi">
+    </div>
+    
+    <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+        <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+            Bulk Data
+        </label>
+        <textarea id="bulkDataInput" 
+                  class="input-proportional" 
+                  rows="15"
+                  style="width: 100%; font-family: 'Courier New', monospace; font-size: clamp(0.875rem, 0.9rem + 0.3vw, 1rem); line-height: 1.6;">++++
+Raqamli tizimlarda qaysi sanoq sistemasi eng keng qo'llaniladi?
+====
+#Ikkilik (Binary)
+====
+Sakkizlik (Octal)
+====
+O'nlik (Decimal)
+====
+O'n oltilik (Hexadecimal)
+++++
+Kompyuter xotirasi nima?
+====
+RAM (Random Access Memory)
+====
+#CPU (Central Processing Unit)
+====
+GPU (Graphics Processing Unit)
+====
+SSD (Solid State Drive)
+++++
+Python dasturlash tilida qaysi operator bo'linish qoldig'ini qaytaradi?
+====
+/
+====
+//
+====
+#%
+====
+**</textarea>
+    </div>
+    
+    <div style="display: flex; gap: clamp(0.75rem, 1.5vw, 1rem);">
+        <button type="button" 
+                id="bulkImportBtn"
+                class="btn-proportional btn-primary"
+                onclick="importBulkQuestions()">
+            Import Questions
+        </button>
+        <button type="button" 
+                class="btn-proportional btn-secondary"
+                onclick="document.getElementById('bulkDataInput').value = ''">
+            Clear
+        </button>
+    </div>
+</div>
+
+{% for question in questions %}
+<div class="card-proportional" style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+        <h3 style="color: var(--accent-emerald);">Question {{ forloop.counter }}</h3>
+        <form method="post" action="{% url 'question_delete' question.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-proportional" onclick="return confirm('Are you sure you want to delete this question?')" 
+                    style="background: var(--accent-red); color: white; padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.75rem, 1.5vw, 1rem); font-size: clamp(0.75rem, 0.9rem + 0.3vw, 0.875rem);">
+                Delete
+            </button>
+        </form>
+    </div>
+    <p style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">{{ question.text }}</p>
+    <div style="display: flex; flex-direction: column; gap: clamp(0.5rem, 1vw, 0.75rem);">
+        {% for option in question.options.all %}
+        <div style="padding: clamp(0.5rem, 1vw, 0.75rem); background: var(--bg-tertiary); border-radius: clamp(0.25rem, 0.5vw, 0.375rem); 
+                    {% if option.is_correct %}border: 2px solid var(--accent-emerald);{% endif %}">
+            <span style="{% if option.is_correct %}color: var(--accent-emerald); font-weight: 600;{% endif %}">
+                {% if option.is_correct %}✓ {% endif %}{{ option.text }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% empty %}
+<div class="card-proportional" style="text-align: center; color: var(--text-secondary);">
+    <p>No questions yet. Add your first question below.</p>
+</div>
+{% endfor %}
+
+<div class="card-proportional">
+    <h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">Add New Question</h2>
+    <form method="post" action="{% url 'question_add' test.id %}">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Question Text *
+            </label>
+            <textarea name="question_text" class="input-proportional" rows="3" required placeholder="Enter your question"></textarea>
+        </div>
+        
+        <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">
+            <label style="display: block; margin-bottom: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary); font-weight: 500;">
+                Options *
+            </label>
+            <div style="display: flex; flex-direction: column; gap: clamp(0.75rem, 1.5vw, 1rem);">
+                {% for i in "1234" %}
+                <div style="display: flex; align-items: center; gap: clamp(0.75rem, 1.5vw, 1rem);">
+                    <input type="radio" name="correct_option" value="{{ forloop.counter0 }}" 
+                           {% if forloop.first %}checked{% endif %} 
+                           style="width: clamp(18px, 1.5vw, 20px); height: clamp(18px, 1.5vw, 20px); cursor: pointer;">
+                    <input type="text" name="option_text" class="input-proportional" 
+                           placeholder="Option {{ forloop.counter }}" required>
+                </div>
+                {% endfor %}
+            </div>
+            <small style="color: var(--text-secondary); margin-top: clamp(0.5rem, 1vw, 0.75rem); display: block;">
+                Select the radio button next to the correct answer
+            </small>
+        </div>
+        
+        <button type="submit" class="btn-proportional btn-primary">Add Question</button>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    function importBulkQuestions() {
+        const bulkData = document.getElementById('bulkDataInput').value.trim();
+        const messageDiv = document.getElementById('bulkImportMessage');
+        const importBtn = document.getElementById('bulkImportBtn');
+        
+        if (!bulkData) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = 'Please enter bulk data to import.';
+            messageDiv.style.display = 'block';
+            return;
+        }
+        
+        // Disable button and show loading
+        importBtn.disabled = true;
+        importBtn.innerHTML = 'Importing...';
+        messageDiv.style.display = 'none';
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('bulk_data', bulkData);
+        const testName = document.getElementById('bulkTestNameInput').value.trim();
+        if (testName) formData.append('test_name', testName);
+        
+        fetch(`{% url 'bulk_upload_questions' test.id %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.className = 'message success';
+                let messageText = data.message;
+                if (data.warnings && data.warnings.length > 0) {
+                    messageText += '\n\nWarnings:\n' + data.warnings.join('\n');
+                }
+                messageDiv.textContent = messageText;
+                messageDiv.style.display = 'block';
+                
+                document.getElementById('bulkDataInput').value = '';
+                
+                // Agar savollar boshqa testga qo'shildi bo'lsa, o'sha testga yo'naltirish
+                const targetTestId = data.test_id;
+                const currentTestId = {{ test.id }};
+                if (targetTestId && targetTestId !== currentTestId) {
+                    setTimeout(() => {
+                        window.location.href = "{% url 'test_edit' test_id=0 %}".replace('/0/', '/' + targetTestId + '/');
+                    }, 1500);
+                } else {
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            } else {
+                messageDiv.className = 'message error';
+                let errorText = data.error || 'An error occurred.';
+                if (data.errors && data.errors.length > 0) {
+                    errorText += '\n\nErrors:\n' + data.errors.join('\n');
+                }
+                messageDiv.textContent = errorText;
+                messageDiv.style.display = 'block';
+                importBtn.disabled = false;
+                importBtn.innerHTML = 'Import Questions';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messageDiv.className = 'message error';
+            messageDiv.textContent = 'An error occurred while importing questions. Please try again.';
+            messageDiv.style.display = 'block';
+            importBtn.disabled = false;
+            importBtn.innerHTML = 'Import Questions';
+        });
+    }
+    
+    document.querySelector('input[name="is_private"]').addEventListener('change', function() {
+        const allowedUsersSection = document.getElementById('allowedUsersSection');
+        allowedUsersSection.style.display = this.checked ? 'block' : 'none';
+    });
+
+    var pdfExportQuestionsBtn = document.getElementById('pdfExportQuestionsBtn');
+    if (pdfExportQuestionsBtn) {
+        pdfExportQuestionsBtn.addEventListener('click', function() {
+            var el = document.getElementById('questions-pdf-content');
+            if (!el) return;
+            this.disabled = true;
+            this.textContent = 'Yuklanmoqda...';
+            html2pdf().set({
+                margin: 10,
+                filename: 'Savollar_{{ test.title|slugify }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(function() {
+                pdfExportQuestionsBtn.disabled = false;
+                pdfExportQuestionsBtn.textContent = 'PDF sifatida yuklab olish';
+            }).catch(function() {
+                pdfExportQuestionsBtn.disabled = false;
+                pdfExportQuestionsBtn.textContent = 'PDF sifatida yuklab olish';
+            });
+        });
+    }
+</script>
+{% endblock %}

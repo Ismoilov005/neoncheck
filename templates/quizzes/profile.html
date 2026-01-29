@@ -1,0 +1,72 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Profil — {{ user.username }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--spacing-4);">
+    <a href="{% url 'user_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: var(--spacing-4);">Profil</h1>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); align-items: start; margin-bottom: var(--spacing-4);">
+    <div class="card-proportional" style="margin-bottom: 0;">
+        <div style="text-align: center; margin-bottom: var(--spacing-3);">
+            {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+            {% else %}
+            <div style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; background: var(--bg-tertiary); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--text-secondary);">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+            {% endif %}
+        </div>
+        <p style="font-weight: 600; margin-bottom: var(--spacing-3); text-align: center;">{{ user.username }}</p>
+        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-3); text-align: center;">{{ user.get_role_display }}</p>
+        <form method="post" enctype="multipart/form-data" action="{% url 'profile' %}" style="margin-bottom: var(--spacing-3);">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="avatar">
+            <label class="btn-proportional btn-secondary" style="display: inline-block; cursor: pointer; margin-bottom: var(--spacing-3);">
+                📤 Upload rasm
+                <input type="file" name="avatar" accept="image/*" style="display: none;" onchange="this.form.submit();">
+            </label>
+        </form>
+        <form method="post" action="{% url 'profile' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="bio">
+            <label style="display: block; margin-bottom: var(--spacing-3); color: var(--text-secondary); font-size: 0.875rem;">Bio</label>
+            <textarea name="bio" class="input-proportional" rows="3" placeholder="Qisqacha o'zingiz haqingizda...">{{ profile.bio }}</textarea>
+            <button type="submit" class="btn-proportional btn-primary" style="margin-top: var(--spacing-3);">Saqlash</button>
+        </form>
+    </div>
+    <div class="card-proportional" style="margin-bottom: 0;">
+        <h2 style="margin-bottom: var(--spacing-3); color: var(--accent-emerald);">Sertifikatlar</h2>
+        {% if certificates %}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            {% for r in certificates %}
+            <li style="padding: var(--spacing-3) 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-3);">
+                <div>
+                    <strong>{{ r.test.title }}</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;"> — {{ r.percentage|floatformat:1 }}%</span>
+                    <br>
+                    <span style="color: var(--text-secondary); font-size: 0.8rem;">{{ r.completed_at|date:"d.m.Y" }}</span>
+                </div>
+                <a href="{% url 'download_certificate' r.id %}" class="btn-proportional btn-primary" style="text-decoration: none; display: inline-block;">
+                    Yuklab olish (PDF)
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-secondary);">Hali sertifikat yo'q. Testlarni 80% dan yuqori ball bilan topshiring.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

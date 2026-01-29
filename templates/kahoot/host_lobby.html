@@ -1,0 +1,129 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Kahoot - Host Lobby{% endblock %}
+
+{% block content %}
+<div class="kahoot-container">
+    <div class="kahoot-logo">KAHOOT!</div>
+    
+    <p style="font-size: 1.3rem; margin-bottom: 10px;">{{ quiz.title }}</p>
+    
+    <p style="margin-bottom: 5px; font-size: 1.2rem;">O'yinga qo'shilish uchun:</p>
+    <p style="margin-bottom: 5px; opacity: 0.8;">kahoot.your-domain.com/join</p>
+    
+    <div class="pin-display">{{ pin }}</div>
+    
+    <div id="players-section" style="width: 100%; max-width: 700px;">
+        <p style="margin-bottom: 15px;"><span id="player-count">0</span> / <span id="max-players">{{ session.max_players|default:50 }}</span> o'yinchi</p>
+        
+        <div class="player-list" id="player-list">
+            <!-- Players will be added here dynamically -->
+        </div>
+    </div>
+    
+    <button id="start-btn" class="kahoot-btn kahoot-btn-primary" style="margin-top: 30px; width: auto; padding: 20px 60px; font-size: 1.5rem;" onclick="startGame()" disabled>
+        O'yinni boshlash
+    </button>
+    
+    <p id="start-hint" style="margin-top: 15px; opacity: 0.7;">Kamida 1 o'yinchi kerak</p>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kick-btn-neon {
+        margin-left: 8px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(226, 27, 60, 0.6);
+        background: rgba(226, 27, 60, 0.3);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .kick-btn-neon:hover {
+        background: var(--kahoot-red);
+        box-shadow: 0 0 12px rgba(226, 27, 60, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const pin = '{{ pin }}';
+    const avatarEmojis = ['😀', '😎', '🤓', '😺', '🦊', '🐶', '🐱', '🦁', '🐼', '🐸', '🦄', '🐲', '🤖', '👽', '🎃'];
+    let players = {};
+    
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/kahoot/${pin}/`);
+    
+    ws.onopen = function() {
+        ws.send(JSON.stringify({ action: 'host_join' }));
+    };
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'host_connected') {
+            if (data.max_players) document.getElementById('max-players').textContent = data.max_players;
+            data.players.forEach(p => addPlayer(p));
+        } else if (data.type === 'player_joined') {
+            addPlayer(data);
+        } else if (data.type === 'player_left') {
+            removePlayer(data.player_id);
+        } else if (data.type === 'player_kicked') {
+            removePlayer(data.player_id);
+        }
+    };
+    
+    function addPlayer(player) {
+        const pid = player.player_id || player.id;
+        if (players[pid]) return;
+        
+        players[pid] = player;
+        
+        const emoji = avatarEmojis[(player.avatar_id || 1) - 1] || '😀';
+        const chip = document.createElement('div');
+        chip.className = 'player-chip';
+        chip.id = 'player-' + pid;
+        chip.innerHTML = '<span>' + emoji + '</span> <span class="chip-name">' + (player.nickname || '') + '</span> <button type="button" class="kick-btn-neon" data-player-id="' + pid + '" title="Kick">✕</button>';
+        
+        const kickBtn = chip.querySelector('.kick-btn-neon');
+        if (kickBtn) kickBtn.onclick = function() {
+            ws.send(JSON.stringify({ action: 'kick_player', player_id: pid }));
+        };
+        
+        document.getElementById('player-list').appendChild(chip);
+        updatePlayerCount();
+    }
+    
+    function removePlayer(playerId) {
+        delete players[playerId];
+        const chip = document.getElementById(`player-${playerId}`);
+        if (chip) chip.remove();
+        updatePlayerCount();
+    }
+    
+    function updatePlayerCount() {
+        const count = Object.keys(players).length;
+        document.getElementById('player-count').textContent = count;
+        
+        const startBtn = document.getElementById('start-btn');
+        const startHint = document.getElementById('start-hint');
+        
+        if (count >= 1) {
+            startBtn.disabled = false;
+            startHint.style.display = 'none';
+        } else {
+            startBtn.disabled = true;
+            startHint.style.display = 'block';
+        }
+    }
+    
+    function startGame() {
+        ws.send(JSON.stringify({ action: 'start_game' }));
+        window.location.href = `/kahoot/host/${pin}/game/`;
+    }
+</script>
+{% endblock %}

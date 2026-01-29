@@ -1,0 +1,63 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.28rem, 2.55vw, 2.13rem);">
+    <a href="{% url 'dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: clamp(1.28rem, 2.55vw, 2.13rem); text-align: center;">🏆 Global Leaderboard</h1>
+
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--accent-emerald);">
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: left; color: var(--accent-emerald); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); text-transform: uppercase; letter-spacing: 1px;">Rank</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: left; color: var(--accent-emerald); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); text-transform: uppercase; letter-spacing: 1px;">User</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--accent-emerald); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); text-transform: uppercase; letter-spacing: 1px;">Best Score</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--accent-emerald); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); text-transform: uppercase; letter-spacing: 1px;">Avg Score</th>
+                    <th style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--accent-emerald); font-size: clamp(0.74rem, 0.77rem + 0.26vw, 0.85rem); text-transform: uppercase; letter-spacing: 1px;">Tests</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in leaderboard %}
+                <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.3s ease;" 
+                    onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); font-weight: 700; font-size: clamp(0.94rem, 1.7vw, 1.28rem); color: {% if forloop.counter == 1 %}#FFD700{% elif forloop.counter == 2 %}#C0C0C0{% elif forloop.counter == 3 %}#CD7F32{% else %}var(--text-primary){% endif %};">
+                        {% if forloop.counter <= 3 %}
+                        🏆
+                        {% endif %}
+                        #{{ forloop.counter }}
+                    </td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); font-weight: 600;">
+                        {{ entry.user.username }}
+                    </td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center;">
+                        <span style="color: var(--accent-emerald); font-weight: 700; font-size: clamp(0.94rem, 1.7vw, 1.28rem); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">
+                            {{ entry.best_score|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--text-secondary);">
+                        {{ entry.avg_score|floatformat:1 }}%
+                    </td>
+                    <td style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--text-secondary);">
+                        {{ entry.total_tests }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: clamp(0.64rem, 1.28vw, 0.85rem); text-align: center; color: var(--text-secondary);">
+                        No results yet. Be the first to take a test!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

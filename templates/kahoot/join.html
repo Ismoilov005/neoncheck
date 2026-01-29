@@ -1,0 +1,88 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Kahoot - O'yinga qo'shiling{% endblock %}
+
+{% block content %}
+<div class="kahoot-container">
+    <div class="kahoot-logo">KAHOOT!</div>
+    
+    <div class="kahoot-card">
+        <form method="post" id="joinForm">
+            {% csrf_token %}
+            
+            <input type="text" 
+                   name="pin" 
+                   class="kahoot-input" 
+                   placeholder="O'yin PIN kodi" 
+                   maxlength="6" 
+                   pattern="[0-9]{6}" 
+                   required
+                   autocomplete="off"
+                   inputmode="numeric">
+            
+            <input type="text" 
+                   name="nickname" 
+                   class="kahoot-input" 
+                   placeholder="Ismingiz (Nickname)" 
+                   maxlength="30" 
+                   required
+                   autocomplete="off">
+            
+            <p style="margin: 15px 0 10px; font-weight: 600;">Avatarni tanlang:</p>
+            
+            <div class="avatar-grid">
+                {% for i in "123456789ABCDEF" %}
+                <div class="avatar-item {% if forloop.first %}selected{% endif %}" 
+                     data-avatar="{{ forloop.counter }}"
+                     onclick="selectAvatar(this, {{ forloop.counter }})">
+                    {% if forloop.counter == 1 %}😀{% endif %}
+                    {% if forloop.counter == 2 %}😎{% endif %}
+                    {% if forloop.counter == 3 %}🤓{% endif %}
+                    {% if forloop.counter == 4 %}😺{% endif %}
+                    {% if forloop.counter == 5 %}🦊{% endif %}
+                    {% if forloop.counter == 6 %}🐶{% endif %}
+                    {% if forloop.counter == 7 %}🐱{% endif %}
+                    {% if forloop.counter == 8 %}🦁{% endif %}
+                    {% if forloop.counter == 9 %}🐼{% endif %}
+                    {% if forloop.counter == 10 %}🐸{% endif %}
+                    {% if forloop.counter == 11 %}🦄{% endif %}
+                    {% if forloop.counter == 12 %}🐲{% endif %}
+                    {% if forloop.counter == 13 %}🤖{% endif %}
+                    {% if forloop.counter == 14 %}👽{% endif %}
+                    {% if forloop.counter == 15 %}🎃{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <input type="hidden" name="avatar_id" id="avatar_id" value="1">
+            
+            <button type="submit" class="kahoot-btn kahoot-btn-primary">
+                Kirish
+            </button>
+        </form>
+    </div>
+    
+    <p style="margin-top: 30px; opacity: 0.7;">
+        <a href="/" style="color: white; text-decoration: none;">← Asosiy saytga qaytish</a>
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const avatarEmojis = ['😀', '😎', '🤓', '😺', '🦊', '🐶', '🐱', '🦁', '🐼', '🐸', '🦄', '🐲', '🤖', '👽', '🎃'];
+    
+    function selectAvatar(element, id) {
+        // Remove selection from all
+        document.querySelectorAll('.avatar-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        // Add selection to clicked
+        element.classList.add('selected');
+        document.getElementById('avatar_id').value = id;
+    }
+    
+    // Auto-focus PIN input
+    document.querySelector('input[name="pin"]').focus();
+</script>
+{% endblock %}

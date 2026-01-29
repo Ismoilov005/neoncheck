@@ -1,0 +1,42 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Xabarlar{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--spacing-4);">
+    <a href="{% url 'dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Orqaga
+    </a>
+</div>
+
+<h1 style="margin-bottom: var(--spacing-4);">Xabarlar</h1>
+
+{% if notifications %}
+<div class="card-proportional">
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        {% for n in notifications %}
+        <li style="padding: var(--spacing-3); border-bottom: 1px solid var(--border-color); {% if not n.is_read %}background: rgba(16, 185, 129, 0.08);{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: var(--spacing-3); flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 0;">
+                    <p style="margin-bottom: var(--spacing-3);">{{ n.message }}</p>
+                    <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                        {% if n.sender %}{{ n.sender.username }} — {% endif %}{{ n.timestamp|date:"d.m.Y H:i" }}
+                    </span>
+                </div>
+                {% if not n.is_read %}
+                <form method="post" action="{% url 'notification_mark_read' n.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-proportional btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;">O'qildi</button>
+                </form>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="card-proportional" style="text-align: center; color: var(--text-secondary);">
+    <p>Xabarlar yo'q.</p>
+</div>
+{% endif %}
+{% endblock %}

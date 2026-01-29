@@ -1,0 +1,32 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Kahoot - Yangi Quiz{% endblock %}
+
+{% block content %}
+<div class="kahoot-container">
+    <div class="kahoot-logo">KAHOOT!</div>
+    
+    <div class="kahoot-card" style="max-width: 500px;">
+        <h2 style="margin-bottom: 20px;">Yangi Quiz yaratish</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <input type="text" 
+                   name="title" 
+                   class="kahoot-input" 
+                   placeholder="Quiz nomi (masalan: Matematika 5-sinf)"
+                   required
+                   autofocus>
+            
+            <button type="submit" class="kahoot-btn kahoot-btn-primary">
+                Yaratish va savollar qo'shish
+            </button>
+        </form>
+        
+        <a href="{% url 'kahoot_dashboard' %}" style="color: white; opacity: 0.8; display: block; margin-top: 20px; text-decoration: none;">
+            ← Bekor qilish
+        </a>
+    </div>
+</div>
+{% endblock %}

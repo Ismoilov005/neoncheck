@@ -1,0 +1,294 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Superuser Dashboard{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">Superuser Dashboard</h1>
+
+<div class="grid-proportional" style="margin-bottom: clamp(2rem, 4vw, 3rem);">
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Users</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_users }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Admins</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_admins }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Tests</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_tests }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Private Tests</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_private_tests }}</p>
+    </div>
+    
+    <div class="card-proportional">
+        <h3 style="color: var(--accent-emerald); margin-bottom: clamp(0.5rem, 1vw, 0.75rem);">Total Results</h3>
+        <p style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700;">{{ total_results }}</p>
+    </div>
+</div>
+
+<div style="display: flex; gap: var(--spacing-3); margin-bottom: var(--spacing-4); flex-wrap: wrap;">
+    <a href="{% url 'manage_users' %}" class="btn-proportional btn-primary">Manage Users</a>
+    {% if user.is_superuser %}
+    <a href="{% url 'superuser_certificates' %}" class="btn-proportional btn-primary">Sertifikatlar Monitoringi</a>
+    {% endif %}
+</div>
+
+{% if user.is_superuser %}
+<div class="card-proportional" style="margin-bottom: var(--spacing-4);">
+    <h2 style="margin-bottom: var(--spacing-3); color: var(--accent-emerald);">Barcha foydalanuvchilarga xabar yuborish</h2>
+    <form method="post" action="{% url 'superuser_send_notification_all' %}">
+        {% csrf_token %}
+        <label style="display: block; margin-bottom: var(--spacing-3); color: var(--text-secondary);">Xabar matni</label>
+        <textarea name="message" class="input-proportional" rows="3" required placeholder="Xabar matnini kiriting..."></textarea>
+        <button type="submit" class="btn-proportional btn-primary" style="margin-top: var(--spacing-3);">Yuborish</button>
+    </form>
+</div>
+{% endif %}
+
+<h2 style="margin-bottom: clamp(1rem, 2vw, 1.5rem);">Recent Test Activity</h2>
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Test Title</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Creator</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Created</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in recent_tests %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ test.title }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ test.creator.username }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary);">
+                        {{ test.created_at|date:"M d, Y" }}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        {% if test.is_private %}
+                        <span style="color: var(--accent-red);">Private</span>
+                        {% else %}
+                        <span style="color: var(--accent-emerald);">Public</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: center; color: var(--text-secondary);">
+                        No tests yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h2 style="margin-top: clamp(2rem, 4vw, 3rem); margin-bottom: clamp(1rem, 2vw, 1.5rem);">All Users</h2>
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Username</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Email</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Role</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Tests Taken</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Avg Score</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Joined</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                {% for user_obj in users_with_stats %}
+                <tr id="user-row-{{ user_obj.id }}" style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ user_obj.username }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary);">
+                        {{ user_obj.email|default:"—" }}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        <span id="role-badge-{{ user_obj.id }}" 
+                              class="role-badge"
+                              style="padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem); 
+                                     border-radius: clamp(0.25rem, 0.5vw, 0.375rem); 
+                                     font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);
+                                     {% if user_obj.role == 'SUPERUSER' %}background: rgba(239, 68, 68, 0.2); color: var(--accent-red);
+                                     {% elif user_obj.role == 'ADMIN' %}background: rgba(59, 130, 246, 0.2); color: var(--accent-blue);
+                                     {% else %}background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald);{% endif %}">
+                            {{ user_obj.get_role_display }}
+                        </span>
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        {{ user_obj.tests_taken|default:0 }}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        {% if user_obj.total_score %}
+                        <span style="color: var(--accent-emerald); font-weight: 600;">
+                            {{ user_obj.total_score|floatformat:1 }}%
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary);">
+                        {{ user_obj.date_joined|date:"M d, Y" }}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        {% if user_obj.id != request.user.id and user_obj.role != 'SUPERUSER' %}
+                        <button id="role-btn-{{ user_obj.id }}"
+                                class="role-toggle-btn btn-proportional"
+                                data-user-id="{{ user_obj.id }}"
+                                data-current-role="{{ user_obj.role }}"
+                                style="font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem); padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.75rem, 1.5vw, 1rem);"
+                                onclick="toggleUserRole({{ user_obj.id }})">
+                            {% if user_obj.role == 'USER' %}
+                            <span style="color: var(--accent-emerald);">↑ Promote to Admin</span>
+                            {% else %}
+                            <span style="color: var(--accent-red);">↓ Demote to User</span>
+                            {% endif %}
+                        </button>
+                        {% else %}
+                        <span style="color: var(--text-secondary); font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: center; color: var(--text-secondary);">
+                        No users found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h2 style="margin-top: clamp(2rem, 4vw, 3rem); margin-bottom: clamp(1rem, 2vw, 1.5rem);">Admin Activity Statistics</h2>
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Admin</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Tests Created</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Total Results</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admin_stats %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ admin.username }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ admin.tests_created }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ admin.total_results }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: center; color: var(--text-secondary);">
+                        No admin activity yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    function toggleUserRole(userId) {
+        const btn = document.getElementById(`role-btn-${userId}`);
+        const badge = document.getElementById(`role-badge-${userId}`);
+        
+        if (!btn || btn.disabled) return;
+        
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span style="color: var(--text-secondary);">Processing...</span>';
+        
+        fetch(`/api/user/${userId}/toggle-role/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update role badge
+                const newRole = data.new_role;
+                const newDisplay = data.new_role_display;
+                
+                // Update badge styling
+                if (newRole === 'ADMIN') {
+                    badge.style.background = 'rgba(59, 130, 246, 0.2)';
+                    badge.style.color = 'var(--accent-blue)';
+                } else {
+                    badge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    badge.style.color = 'var(--accent-emerald)';
+                }
+                badge.textContent = newDisplay;
+                
+                // Update button
+                if (newRole === 'USER') {
+                    btn.innerHTML = '<span style="color: var(--accent-emerald);">↑ Promote to Admin</span>';
+                    btn.dataset.currentRole = 'USER';
+                } else {
+                    btn.innerHTML = '<span style="color: var(--accent-red);">↓ Demote to User</span>';
+                    btn.dataset.currentRole = 'ADMIN';
+                }
+                
+                // Show success message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message success';
+                messageDiv.textContent = data.message;
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.right = '20px';
+                messageDiv.style.zIndex = '9999';
+                messageDiv.style.minWidth = 'clamp(200px, 30vw, 300px)';
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error occurred'));
+                btn.innerHTML = originalText;
+            }
+            btn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating user role.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}

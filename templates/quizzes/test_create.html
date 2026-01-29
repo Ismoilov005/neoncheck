@@ -1,0 +1,77 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Create Test{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'admin_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">Create New Test</h1>
+
+<div class="card-proportional">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Test Title *
+            </label>
+            <input type="text" name="title" class="input-proportional" required placeholder="Enter test title">
+        </div>
+        
+        <div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Description
+            </label>
+            <textarea name="description" class="input-proportional" rows="4" placeholder="Enter test description (optional)"></textarea>
+        </div>
+        
+        <div style="margin-bottom: clamp(1.28rem, 2.55vw, 1.7rem);">
+            <label style="display: block; margin-bottom: clamp(0.43rem, 0.85vw, 0.64rem); color: var(--text-secondary); font-weight: 500;">
+                Time Limit (minutes) *
+            </label>
+            <input type="number" name="time_limit" class="input-proportional" value="15" min="1" max="300" required>
+        </div>
+        
+        <div style="margin-bottom: clamp(1.28rem, 2.55vw, 1.7rem);">
+            <label style="display: flex; align-items: center; gap: clamp(0.43rem, 0.85vw, 0.64rem); cursor: pointer;">
+                <input type="checkbox" name="is_private" style="width: clamp(15px, 1.28vw, 17px); height: clamp(15px, 1.28vw, 17px); cursor: pointer;">
+                <span style="color: var(--text-secondary);">Make this test private</span>
+            </label>
+        </div>
+        
+        <div id="allowedUsersSection" style="display: none; margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+            <label style="display: block; margin-bottom: clamp(0.5rem, 1vw, 0.75rem); color: var(--text-secondary); font-weight: 500;">
+                Allowed Users (select users who can access this private test)
+            </label>
+            <div style="max-height: clamp(200px, 30vw, 300px); overflow-y: auto; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: clamp(0.375rem, 0.8vw, 0.5rem); padding: clamp(0.75rem, 1.5vw, 1rem);">
+                {% for user_obj in users %}
+                <label style="display: flex; align-items: center; padding: clamp(0.5rem, 1vw, 0.75rem); cursor: pointer; transition: background 0.2s;">
+                    <input type="checkbox" name="allowed_users" value="{{ user_obj.id }}" style="margin-right: clamp(0.5rem, 1vw, 0.75rem); cursor: pointer;">
+                    <span>{{ user_obj.username }} ({{ user_obj.email }})</span>
+                </label>
+                {% empty %}
+                <p style="color: var(--text-secondary); text-align: center; padding: clamp(1rem, 2vw, 1.5rem);">No users available</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: clamp(0.75rem, 1.5vw, 1rem);">
+            <button type="submit" class="btn-proportional btn-primary">Create Test</button>
+            <a href="{% url 'admin_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.querySelector('input[name="is_private"]').addEventListener('change', function() {
+        const allowedUsersSection = document.getElementById('allowedUsersSection');
+        allowedUsersSection.style.display = this.checked ? 'block' : 'none';
+    });
+</script>
+{% endblock %}

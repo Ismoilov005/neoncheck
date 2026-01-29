@@ -1,0 +1,61 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Kahoot - Boshqaruv{% endblock %}
+
+{% block content %}
+<div class="kahoot-container" style="justify-content: flex-start; padding-top: 40px;">
+    <div class="kahoot-logo">KAHOOT!</div>
+    <p style="margin-bottom: 30px; opacity: 0.8;">Boshqaruv paneli</p>
+    
+    <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center;">
+        <a href="{% url 'kahoot_create_quiz' %}" class="kahoot-btn kahoot-btn-primary" style="text-decoration: none; width: auto; padding: 16px 40px;">
+            + Yangi Quiz yaratish
+        </a>
+        <a href="/" class="kahoot-btn" style="text-decoration: none; width: auto; padding: 16px 40px; background: rgba(255,255,255,0.2);">
+            ← Asosiy sayt
+        </a>
+    </div>
+    
+    {% if active_sessions %}
+    <h3 style="margin-bottom: 20px;">🎮 Faol sessiyalar</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 40px;">
+        {% for session in active_sessions %}
+        <div class="kahoot-card" style="max-width: 280px;">
+            <h4>{{ session.quiz.title }}</h4>
+            <div class="pin-display" style="font-size: 2rem; letter-spacing: 4px;">{{ session.pin }}</div>
+            <p style="opacity: 0.8;">{{ session.players.count }} o'yinchi</p>
+            <p style="font-size: 0.9rem; margin-top: 10px;">
+                {% if session.status == 'LOBBY' %}⏳ Kutish{% else %}🎯 O'ynalmoqda{% endif %}
+            </p>
+            <a href="{% url 'kahoot_host_lobby' session.pin %}" class="kahoot-btn kahoot-btn-primary" style="text-decoration: none; margin-top: 15px; display: block;">
+                Boshqarish
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <h3 style="margin-bottom: 20px;">📚 Quizlarim</h3>
+    
+    {% if quizzes %}
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 900px;">
+        {% for quiz in quizzes %}
+        <div class="kahoot-card" style="max-width: 280px; text-align: left;">
+            <h4 style="margin-bottom: 10px;">{{ quiz.title }}</h4>
+            <p style="opacity: 0.7; font-size: 0.9rem;">{{ quiz.questions.count }} savol</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <a href="{% url 'kahoot_edit_quiz' quiz.id %}" class="kahoot-btn" style="text-decoration: none; flex: 1; padding: 10px; font-size: 0.85rem; background: rgba(255,255,255,0.2);">
+                    ✏️ Tahrirlash
+                </a>
+                <a href="{% url 'kahoot_start_session' quiz.id %}" class="kahoot-btn kahoot-btn-primary" style="text-decoration: none; flex: 1; padding: 10px; font-size: 0.85rem;">
+                    ▶️ Boshlash
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="opacity: 0.7;">Hali quizlar yo'q. Birinchi quizingizni yarating!</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Sertifikatlar Monitoringi{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--spacing-4);">
+    <a href="{% url 'superuser_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Superuser Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: var(--spacing-4);">Sertifikatlar Monitoringi</h1>
+<p style="color: var(--text-secondary); margin-bottom: var(--spacing-4);">Kim, qachon, qaysi testdan sertifikat olgani va PDF yuklab olish.</p>
+
+{% if cert_results %}
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: var(--spacing-3); text-align: left;">Foydalanuvchi</th>
+                    <th style="padding: var(--spacing-3); text-align: left;">Test</th>
+                    <th style="padding: var(--spacing-3); text-align: left;">Ball</th>
+                    <th style="padding: var(--spacing-3); text-align: left;">Sana</th>
+                    <th style="padding: var(--spacing-3); text-align: left;">PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in cert_results %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: var(--spacing-3);">{{ r.user.username }}</td>
+                    <td style="padding: var(--spacing-3);">{{ r.test.title }}</td>
+                    <td style="padding: var(--spacing-3); color: var(--accent-emerald); font-weight: 600;">{{ r.percentage|floatformat:1 }}%</td>
+                    <td style="padding: var(--spacing-3); color: var(--text-secondary);">{{ r.completed_at|date:"d.m.Y H:i" }}</td>
+                    <td style="padding: var(--spacing-3);">
+                        <a href="{% url 'superuser_certificates' %}?download={{ r.id }}" class="btn-proportional btn-primary" style="text-decoration: none; display: inline-block; font-size: 0.8rem; padding: 6px 12px;">
+                            Yuklab olish
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card-proportional" style="text-align: center; color: var(--text-secondary);">
+    <p>Hali hech kim sertifikat olmagan.</p>
+</div>
+{% endif %}
+{% endblock %}

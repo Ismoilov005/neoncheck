@@ -1,0 +1,71 @@
+{% extends 'kahoot/base.html' %}
+
+{% block title %}Tahrirlash - {{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .option-input-group { display: flex; gap: 8px; align-items: center; }
+    .option-input-group input { flex: 1; }
+    .option-badge { width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    textarea.kahoot-input { min-height: 80px; resize: vertical; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="kahoot-container" style="justify-content: flex-start; padding-top: 30px; overflow-y: auto;">
+    <div style="width: 100%; max-width: 700px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="font-size: 1.4rem;">Savolni tahrirlash</h1>
+            <a href="{% url 'kahoot_edit_quiz' quiz.id %}" class="kahoot-btn" style="text-decoration: none; padding: 10px 20px; background: rgba(255,255,255,0.2);">← Orqaga</a>
+        </div>
+        <div class="kahoot-card add-form">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <textarea name="text" class="kahoot-input" placeholder="Savol matni" required>{{ question.text }}</textarea>
+                <div class="options-grid" style="margin-top: 12px;">
+                    <div class="option-input-group">
+                        <span class="option-badge" style="background: var(--kahoot-red);">▲</span>
+                        <input type="text" name="option_a" class="kahoot-input" value="{{ question.option_a }}" required style="margin: 0;">
+                    </div>
+                    <div class="option-input-group">
+                        <span class="option-badge" style="background: var(--kahoot-blue);">◆</span>
+                        <input type="text" name="option_b" class="kahoot-input" value="{{ question.option_b }}" required style="margin: 0;">
+                    </div>
+                    <div class="option-input-group">
+                        <span class="option-badge" style="background: var(--kahoot-yellow);">●</span>
+                        <input type="text" name="option_c" class="kahoot-input" value="{{ question.option_c }}" required style="margin: 0;">
+                    </div>
+                    <div class="option-input-group">
+                        <span class="option-badge" style="background: var(--kahoot-green);">■</span>
+                        <input type="text" name="option_d" class="kahoot-input" value="{{ question.option_d }}" required style="margin: 0;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; opacity: 0.8;">To'g'ri javob:</label>
+                        <select name="correct_option" class="kahoot-input" style="text-align: left;">
+                            <option value="A" {% if question.correct_option == 'A' %}selected{% endif %}>A - Qizil</option>
+                            <option value="B" {% if question.correct_option == 'B' %}selected{% endif %}>B - Ko'k</option>
+                            <option value="C" {% if question.correct_option == 'C' %}selected{% endif %}>C - Sariq</option>
+                            <option value="D" {% if question.correct_option == 'D' %}selected{% endif %}>D - Yashil</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; opacity: 0.8;">Vaqt limiti (soniya):</label>
+                        <input type="number" name="time_limit" class="kahoot-input" value="{{ question.time_limit }}" min="5" max="120" style="text-align: left;">
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; opacity: 0.8;">Rasm (ixtiyoriy):</label>
+                    {% if question.image %}
+                    <p style="margin-bottom: 8px;"><img src="{{ question.image.url }}" alt="" style="max-width: 180px; border-radius: 8px; border: 2px solid rgba(184,255,158,0.4); box-shadow: 0 0 15px rgba(184,255,158,0.3);"></p>
+                    {% endif %}
+                    <input type="file" name="image" accept="image/*" style="color: white;">
+                </div>
+                <button type="submit" class="kahoot-btn kahoot-btn-primary" style="margin-top: 20px;">Saqlash</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

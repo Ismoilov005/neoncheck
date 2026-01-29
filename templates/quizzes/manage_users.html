@@ -1,0 +1,72 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">
+    <a href="{% url 'superuser_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<h1 style="margin-bottom: clamp(1.5rem, 3vw, 2rem);">Manage Users & Admins</h1>
+
+<div class="card-proportional">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Username</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Email</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Current Role</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Change Role</th>
+                    <th style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: left;">Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_obj in users %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">{{ user_obj.username }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary);">{{ user_obj.email|default:"—" }}</td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        <span style="padding: clamp(0.25rem, 0.5vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem); 
+                                    background: {% if user_obj.role == 'SUPERUSER' %}rgba(239, 68, 68, 0.2); color: var(--accent-red);
+                                    {% elif user_obj.role == 'ADMIN' %}rgba(59, 130, 246, 0.2); color: var(--accent-blue);
+                                    {% else %}rgba(16, 185, 129, 0.2); color: var(--accent-emerald);{% endif %}; 
+                                    border-radius: clamp(0.25rem, 0.5vw, 0.375rem); 
+                                    font-size: clamp(0.75rem, 0.8rem + 0.3vw, 0.875rem);">
+                            {{ user_obj.get_role_display }}
+                        </span>
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem);">
+                        {% if user_obj != request.user %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ user_obj.id }}">
+                            <select name="role" onchange="this.form.submit()" 
+                                    style="padding: clamp(0.375rem, 0.8vw, 0.5rem); background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: clamp(0.25rem, 0.5vw, 0.375rem); color: var(--text-primary); cursor: pointer;">
+                                <option value="USER" {% if user_obj.role == 'USER' %}selected{% endif %}>User</option>
+                                <option value="ADMIN" {% if user_obj.role == 'ADMIN' %}selected{% endif %}>Admin</option>
+                                <option value="SUPERUSER" {% if user_obj.role == 'SUPERUSER' %}selected{% endif %}>Superuser</option>
+                            </select>
+                        </form>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">Current User</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: clamp(0.75rem, 1.5vw, 1rem); color: var(--text-secondary);">
+                        {{ user_obj.date_joined|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: clamp(0.75rem, 1.5vw, 1rem); text-align: center; color: var(--text-secondary);">
+                        No users found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

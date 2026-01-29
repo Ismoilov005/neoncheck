@@ -1,0 +1,126 @@
+{% extends 'quizzes/base.html' %}
+
+{% block title %}Certificate — {{ result.test.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .certificate-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+    }
+    /* Klassik va minimalist sertifikat — oltin/ko'k border */
+    .certificate-card {
+        background: linear-gradient(180deg, #fefefe 0%, #f8f9fa 100%);
+        color: #1a1a1a;
+        border: 3px solid #c9a227;
+        border-radius: 8px;
+        padding: clamp(2rem, 4vw, 3rem);
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+        position: relative;
+    }
+    .certificate-card::before {
+        content: '';
+        position: absolute;
+        top: 12px; left: 12px; right: 12px; bottom: 12px;
+        border: 1px solid rgba(201, 162, 39, 0.4);
+        border-radius: 6px;
+        pointer-events: none;
+    }
+    .certificate-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: #2c5282;
+        margin-bottom: clamp(1rem, 2vw, 1.5rem);
+        text-transform: uppercase;
+    }
+    .certificate-subtitle {
+        font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+        color: #4a5568;
+        margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+    }
+    .certificate-name {
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: clamp(1rem, 2vw, 1.5rem);
+        border-bottom: 2px solid #c9a227;
+        display: inline-block;
+        padding-bottom: 0.5rem;
+    }
+    .certificate-test {
+        font-size: clamp(1rem, 1.5vw, 1.2rem);
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    .certificate-score {
+        font-size: clamp(1.25rem, 2vw, 1.5rem);
+        font-weight: 700;
+        color: #2c5282;
+        margin-bottom: clamp(1rem, 2vw, 1.5rem);
+    }
+    .certificate-date {
+        font-size: clamp(0.9rem, 1.2vw, 1rem);
+        color: #718096;
+    }
+    .certificate-id {
+        font-size: 0.75rem;
+        color: #a0aec0;
+        margin-top: clamp(1rem, 2vw, 1.5rem);
+    }
+    .certificate-actions {
+        margin-top: clamp(2rem, 4vw, 3rem);
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(0.75rem, 1.5vw, 1rem);
+        justify-content: center;
+    }
+    .certificate-actions .btn-proportional {
+        text-decoration: none;
+        display: inline-block;
+    }
+    @media print {
+        body { background: #fff !important; }
+        .navbar, .certificate-actions, #back-to-top, .btn-secondary, .no-print { display: none !important; }
+        .certificate-page { padding: 0; max-width: 100%; }
+        .certificate-card {
+            box-shadow: none;
+            border: 3px solid #c9a227;
+            page-break-inside: avoid;
+        }
+        main { padding: 0 !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="certificate-page">
+    <div style="margin-bottom: clamp(1rem, 2vw, 1.5rem);" class="no-print">
+        <a href="{% url 'user_dashboard' %}" class="btn-proportional btn-secondary" style="text-decoration: none; display: inline-block;">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <div class="certificate-card" id="certificate-content">
+        <div class="certificate-title">Certificate</div>
+        <div class="certificate-subtitle">This is to certify that</div>
+        <div class="certificate-name">{{ result.user.get_full_name|default:result.user.username }}</div>
+        <div class="certificate-subtitle">has successfully completed the test</div>
+        <div class="certificate-test">{{ result.test.title }}</div>
+        <div class="certificate-score">Score: {{ result.percentage|floatformat:1 }}%</div>
+        <div class="certificate-date">Date: {{ result.completed_at|date:"F d, Y" }}</div>
+        <div class="certificate-id">Certificate ID: {{ result.certificate_id|default:""|slice:":8" }}</div>
+    </div>
+
+    <div class="certificate-actions no-print">
+        <a href="{% url 'download_certificate' result.id %}" class="btn-proportional btn-primary">
+            Download Certificate (PDF)
+        </a>
+        <button type="button" class="btn-proportional btn-secondary" onclick="window.print();">
+            Print
+        </button>
+    </div>
+</div>
+{% endblock %}
