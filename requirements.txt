@@ -1,4 +1,5 @@
-﻿asgiref==3.11.0
+psycopg2-binary==2.9.9
+asgiref==3.11.0
 attrs==25.4.0
 autobahn==25.12.2
 Automat==25.4.16
@@ -16,7 +17,7 @@ django-environ==0.12.0
 hyperlink==21.0.0
 idna==3.11
 Incremental==24.11.0
-msgpack==1.1.2
+msgpack==1.1.2a
 packaging==26.0
 pillow==12.1.0
 py-ubjson==0.16.1
@@ -36,4 +37,5 @@ tzdata==2025.3
 ujson==5.11.0
 whitenoise==6.11.0
 zope.interface==8.2
+
 
