@@ -132,14 +132,3 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-```
-
----
-
-### 5. `.env.example` yarating (GitHub uchun namuna):
-```
-SECRET_KEY=your-secret-key-here
-DEBUG=False
-ALLOWED_HOSTS=your-app.onrender.com,localhost
-DATABASE_URL=postgres://user:password@host:5432/dbname
-REDIS_URL=redis://host:6379
