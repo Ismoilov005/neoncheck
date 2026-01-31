@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 # Render hostname qo'shish
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ['https://neoncheck.onrender.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'daphne',  # Channels uchun
