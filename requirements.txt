@@ -17,7 +17,7 @@ django-environ==0.12.0
 hyperlink==21.0.0
 idna==3.11
 Incremental==24.11.0
-msgpack==1.1.2a
+msgpack==1.1.2
 packaging==26.0
 pillow==12.1.0
 py-ubjson==0.16.1
@@ -37,5 +37,6 @@ tzdata==2025.3
 ujson==5.11.0
 whitenoise==6.11.0
 zope.interface==8.2
+
 
 
